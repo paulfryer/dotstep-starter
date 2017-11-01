@@ -1,0 +1,15 @@
+﻿<Properties StartupConfiguration="{AE589672-4AEB-43C5-9289-7331C4B865EF}|Default">
+  <MonoDevelop.Ide.Workbench ActiveDocument="DotStepStarter Status">
+    <Files>
+      <File FileName="Program.cs" Line="5" Column="18" />
+      <File FileName="DotStepStarter Status" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+  <MonoDevelop.Ide.ItemProperties.DotStepStarter PreferredExecutionTarget="MonoDevelop.Default" />
+  <MultiItemStartupConfigurations />
+</Properties>
