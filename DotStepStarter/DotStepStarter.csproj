@@ -5,4 +5,10 @@
     <TargetFramework>netcoreapp1.0</TargetFramework>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="DotStep.Core">
+      <Version>1.0.3</Version>
+    </PackageReference>
+  </ItemGroup>
+
 </Project>
