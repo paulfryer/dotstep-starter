@@ -1,8 +1,7 @@
 ﻿<Properties StartupConfiguration="{AE589672-4AEB-43C5-9289-7331C4B865EF}|Default">
-  <MonoDevelop.Ide.Workbench ActiveDocument="DotStepStarter Status">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Program.cs">
     <Files>
-      <File FileName="Program.cs" Line="5" Column="18" />
-      <File FileName="DotStepStarter Status" />
+      <File FileName="Program.cs" Line="9" Column="53" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
