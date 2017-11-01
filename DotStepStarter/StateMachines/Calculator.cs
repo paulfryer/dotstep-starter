@@ -1,4 +1,5 @@
 ﻿using DotStep.Core;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace DotStepStarter.StateMachines.Calculator
@@ -15,7 +16,7 @@ namespace DotStepStarter.StateMachines.Calculator
     {
     }
 
-    public sealed class AddNumbers : TaskState<Context, SubtrackNumbers>
+    public sealed class AddNumbers : TaskState<Context, DetermineNextStep>
     {
         public override async Task<Context> Execute(Context context)
         {
@@ -24,14 +25,32 @@ namespace DotStepStarter.StateMachines.Calculator
         }
     }
 
-    public sealed class SubtrackNumbers : TaskState<Context, Done> {
+    public sealed class DetermineNextStep : ChoiceState<Done>
+    {
+        public override List<Choice> Choices
+        {
+            get
+            {
+                return new List<Choice> {
+                new Choice<Wait, Context>(c => c.Product > 0)
+                    };
+            }
+        }
+    }
+
+    public sealed class Wait : WaitState<SubtractNumbers>
+    {
+        public override int Seconds => 10;
+    }
+
+    public sealed class SubtractNumbers : TaskState<Context, Done> {
         public override async Task<Context> Execute(Context context)
         {
             context.Product = context.Number1 - context.Number2;
             return context;
         }
     }
-
+    
     public sealed class Done : PassState
     {
         public override bool End => true;
