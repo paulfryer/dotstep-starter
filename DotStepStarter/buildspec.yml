@@ -1,0 +1,10 @@
+﻿version: 0.1
+phases:
+  build:
+    commands:
+      - dotnet restore DotStepStarter
+      - dotnet publish -c release DotStepStarter
+artifacts:
+  files:
+    - DotStepStarter/bin/release/netcoreapp1.0/publish/**/*
+  discard-paths: yes
