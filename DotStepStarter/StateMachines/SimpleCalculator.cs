@@ -1,6 +1,8 @@
 ﻿using Amazon.IdentityManagement;
 using Amazon.S3;
 using Amazon.S3.Model;
+using Amazon.SecurityToken;
+using Amazon.SecurityToken.Model;
 using DotStep.Core;
 using Newtonsoft.Json;
 using System;
@@ -54,20 +56,20 @@ namespace DotStepStarter.StateMachines.Calculator
         }
     }
 
-    [DotStep.Core.Action(ActionName = "iam:GetUser")]
+    [DotStep.Core.Action(ActionName = "sts:GetCallerIdentity")]
     [DotStep.Core.Action(ActionName = "s3:PutBucket")]
     [DotStep.Core.Action(ActionName = "s3:PutObject")]
     public sealed class StoreResultsOnS3 : TaskState<Context, Done>
     {
-        IAmazonIdentityManagementService iam = new AmazonIdentityManagementServiceClient();
         IAmazonS3 s3 = new AmazonS3Client();
+        IAmazonSecurityTokenService sts = new AmazonSecurityTokenServiceClient();
 
         public override async Task<Context> Execute(Context context)
         {
 
-            var getUserResult = await iam.GetUserAsync();
+            var getCallerResult = await sts.GetCallerIdentityAsync(new GetCallerIdentityRequest {});
 
-            var accountId = getUserResult.User.Arn.Split(':')[4];
+            var accountId = getCallerResult.Account;
             var region = Environment.GetEnvironmentVariable("AWS_DEFAULT_REGION") ?? "us-west-2";
 
             var bucketName = $"{typeof(SimpleCalculator).Name}-{region}-{accountId}".ToLower();

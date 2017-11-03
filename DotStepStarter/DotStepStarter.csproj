@@ -20,6 +20,9 @@
     <PackageReference Include="AWSSDK.S3">
       <Version>3.3.11.4</Version>
     </PackageReference>
+    <PackageReference Include="AWSSDK.SecurityToken">
+      <Version>3.3.3.2</Version>
+    </PackageReference>
     <PackageReference Include="DotStep.Core">
       <Version>1.0.5</Version>
     </PackageReference>
