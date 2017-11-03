@@ -9,15 +9,17 @@ phases:
       - echo $HOME
       - echo $CODEBUILD_BUILD_ID
       - echo $CODEBUILD_BUILD_ARN
+      - printenv
   build:
     commands:
       - dotnet restore DotStepStarter
       - dotnet publish -c release DotStepStarter
-  post_build:
-    commands:
       - dotnet restore Builder
       - dotnet publish -c release Builder
       - dotnet Builder/bin/release/netcoreapp1.0/publish/Builder.dll Builder/bin/release
+  post_build:
+    commands:
+      - aws s3api put-object --bucket 
 artifacts:
   files:
     - DotStepStarter/bin/release/netcoreapp1.0/publish/**/*
