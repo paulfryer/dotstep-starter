@@ -12,5 +12,5 @@ phases:
 artifacts:
   files:
     - DotStepStarter/bin/release/netcoreapp1.0/publish/**/*
-    - Builder/bin/release/*
+    - Builder/bin/release/template.json
   discard-paths: yes
