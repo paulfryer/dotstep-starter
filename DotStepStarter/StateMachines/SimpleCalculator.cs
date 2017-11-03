@@ -54,6 +54,9 @@ namespace DotStepStarter.StateMachines.Calculator
         }
     }
 
+    [DotStep.Core.Action(ActionName = "iam:GetUser")]
+    [DotStep.Core.Action(ActionName = "s3:PutBucket")]
+    [DotStep.Core.Action(ActionName = "s3:PutObject")]
     public sealed class StoreResultsOnS3 : TaskState<Context, Done>
     {
         IAmazonIdentityManagementService iam = new AmazonIdentityManagementServiceClient();
