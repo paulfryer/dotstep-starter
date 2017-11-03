@@ -11,8 +11,9 @@ namespace DotStepStarter
 
             var context = new Context
             {
-                Number1 = 19,
-                Number2 = 23
+                Number1 = 1159,
+                Number2 = 23,
+                StoreResultsOnS3 = true
             };
 
             var engine = new StateMachineEngine<SimpleCalculator, Context>(context);

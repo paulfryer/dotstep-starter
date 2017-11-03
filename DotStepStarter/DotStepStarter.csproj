@@ -14,8 +14,17 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="AWSSDK.IdentityManagement">
+      <Version>3.3.5.2</Version>
+    </PackageReference>
+    <PackageReference Include="AWSSDK.S3">
+      <Version>3.3.11.4</Version>
+    </PackageReference>
     <PackageReference Include="DotStep.Core">
       <Version>1.0.5</Version>
+    </PackageReference>
+    <PackageReference Include="Newtonsoft.Json">
+      <Version>9.0.1</Version>
     </PackageReference>
   </ItemGroup>
 
