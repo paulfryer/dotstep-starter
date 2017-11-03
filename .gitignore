@@ -9,3 +9,5 @@ packages
 .vs
 /DotStepStarter/bin
 /DotStepStarter/obj
+/Builder/bin
+/Builder/obj

@@ -5,6 +5,8 @@
     <TargetFramework>netcoreapp1.0</TargetFramework>
     <SignAssembly>false</SignAssembly>
     <AssemblyOriginatorKeyFile>signing-key.snk</AssemblyOriginatorKeyFile>
+    <ApplicationIcon />
+    <StartupObject />
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

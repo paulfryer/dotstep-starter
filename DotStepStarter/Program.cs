@@ -15,8 +15,6 @@ namespace DotStepStarter
                 Number2 = 23
             };
 
-            var json = stateMachine.Describe("AccountId", "Region");
-
             var engine = new StateMachineEngine<SimpleCalculator, Context>(context);
             engine.Start().Wait();
         }
