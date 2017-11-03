@@ -2,14 +2,10 @@
 phases:
   pre_build:
     commands:
-      - echo $CODEBUILD_RESOLVED_SOURCE_VERSION
-      - echo $CODEBUILD_SRC_DIR
-      - echo $CODEBUILD_SOURCE_REPO_URL
-      - echo $CODEBUILD_INITIATOR
-      - echo $HOME
-      - echo $CODEBUILD_BUILD_ID
-      - echo $CODEBUILD_BUILD_ARN
-      - printenv
+      - echo $CODEBUILD_SOURCE_VERSION
+      - echo $CODEBUILD_SOURCE_VERSION | awk -F':' '{print $5}'
+      - $CODEBUILD_SOURCE_VERSION | awk -F':' '{BUCKET=$5}'
+      - echo $BUCKET
   build:
     commands:
       - dotnet restore DotStepStarter
