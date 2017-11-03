@@ -1,5 +1,8 @@
 ﻿using DotStep.Builder;
 using DotStepStarter.StateMachines.Calculator;
+using Newtonsoft.Json;
+using System;
+using System.IO;
 
 namespace DotStepStarter
 {
@@ -7,14 +10,24 @@ namespace DotStepStarter
     {
         static void Main(string[] args)
         {
-            var codeBuildLocation = args.Length > 0 ? 
-                args[0] : 
-                "../DotStepStarter/bin/release/netcoreapp1.0/publish";
-            var releaseDirectory = args.Length > 1 ?
-                args[1] :
-                "bin//release";
+            var template = DotStepBuilder.BuildCloudFormationTemplate<SimpleCalculator>();
+            File.WriteAllText("template.json", template);
 
-            DotStepBuilder.BuildStateMachine<SimpleCalculator>(codeBuildLocation, releaseDirectory).Wait();
+            var s3Url = Environment.GetEnvironmentVariable("CODEBUILD_SOURCE_REPO_URL");
+            Console.WriteLine($"S3 URL: {s3Url}");
+            var s3Bucket = s3Url.Split('/')[2];
+            var s3Key = s3Url.Replace(s3Bucket + "/", string.Empty);
+
+            var config = JsonConvert.SerializeObject(new
+            {
+                Parameters = new
+                {
+                    S3CodeBucket = s3Bucket,
+                    S3CodeKey = s3Key
+                }
+            });
+
+            File.WriteAllText("config.json", config);            
         }
     }
 }
