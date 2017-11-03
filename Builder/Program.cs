@@ -18,10 +18,11 @@ namespace DotStepStarter
             File.WriteAllText(path, template);
 
             var version = Environment.GetEnvironmentVariable("CODEBUILD_SOURCE_VERSION");
-
+            Console.WriteLine("Version: " + version);
             var bucket = version.Split(':')[5];
             var key = version.Split('/')[1] + "/template.json";
-
+            Console.WriteLine("Bucket: " + bucket);
+            Console.WriteLine("Key: " + key);
             s3.PutObjectAsync(new PutObjectRequest
             {
                 BucketName = bucket,
