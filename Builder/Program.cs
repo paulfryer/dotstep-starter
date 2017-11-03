@@ -21,6 +21,7 @@ namespace DotStepStarter
             Console.WriteLine("Version: " + version);
             var bucket = version.Split(':')[5].Split('/')[0];
             var key = version.Split('/')[1] + "/template.json";
+            var codeBuildKmsKeyId = Environment.GetEnvironmentVariable("CODEBUILD_KMS_KEY_ID");
             Console.WriteLine("Bucket: " + bucket);
             Console.WriteLine("Key: " + key);
             s3.PutObjectAsync(new PutObjectRequest
@@ -29,7 +30,8 @@ namespace DotStepStarter
                 Key = key,
                 FilePath = path,
                 ContentType = "application/json",
-                ServerSideEncryptionMethod = ServerSideEncryptionMethod.AES256
+                ServerSideEncryptionMethod = ServerSideEncryptionMethod.AWSKMS,
+                ServerSideEncryptionKeyManagementServiceKeyId = codeBuildKmsKeyId
             }).Wait();
 
         }
