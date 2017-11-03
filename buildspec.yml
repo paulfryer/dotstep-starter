@@ -4,13 +4,7 @@ phases:
     commands:
       - dotnet restore DotStepStarter
       - dotnet publish -c release DotStepStarter
-  post_build:
-    commands:
-      - dotnet restore Builder
-      - dotnet publish -c release Builder
-      - dotnet Builder/bin/release/netcoreapp1.0/publish/Builder.dll DotStepStarter/bin/release/netcoreapp1.0/publish Builder/bin/release
 artifacts:
   files:
-    - Builder/bin/release/template.json
-    - Builder/bin/release/config.json
+    - DotStepStarter/bin/release/netcoreapp1.0/publish/**/*
   discard-paths: yes
