@@ -19,7 +19,7 @@ namespace DotStepStarter
 
             var version = Environment.GetEnvironmentVariable("CODEBUILD_SOURCE_VERSION");
             Console.WriteLine("Version: " + version);
-            var bucket = version.Split(':')[5];
+            var bucket = version.Split(':')[5].Split('/')[0];
             var key = version.Split('/')[1] + "/template.json";
             Console.WriteLine("Bucket: " + bucket);
             Console.WriteLine("Key: " + key);
