@@ -1,23 +1,15 @@
 ﻿version: 0.1
 phases:
-  pre_build:
-    commands:
-      - echo $CODEBUILD_SOURCE_VERSION
-      - echo $CODEBUILD_SOURCE_VERSION | awk -F':' '{print $5}'
-      - $CODEBUILD_SOURCE_VERSION | awk -F':' '{BUCKET=$5}'
-      - echo $BUCKET
   build:
     commands:
       - dotnet restore DotStepStarter
       - dotnet publish -c release DotStepStarter
+  post_build:
+    commands:
       - dotnet restore Builder
       - dotnet publish -c release Builder
       - dotnet Builder/bin/release/netcoreapp1.0/publish/Builder.dll Builder/bin/release
-  post_build:
-    commands:
-      - aws s3api put-object --bucket 
 artifacts:
   files:
     - DotStepStarter/bin/release/netcoreapp1.0/publish/**/*
-    - Builder/bin/release/template.json
   discard-paths: yes
