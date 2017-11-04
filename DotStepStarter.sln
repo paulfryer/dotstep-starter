@@ -7,6 +7,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{DDE1DB38-D06B-4372-9EB2-03DF960A5AFF}"
 	ProjectSection(SolutionItems) = preProject
 		buildspec.yml = buildspec.yml
+		DotStepStarterTemplate.json = DotStepStarterTemplate.json
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Builder", "Builder\Builder.csproj", "{E182EC15-8AFD-4DC5-A7A4-76C2048A8B83}"

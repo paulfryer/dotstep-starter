@@ -7,7 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace DotStepStarter
+namespace Builder
 {
     class Program
     {
@@ -20,6 +20,8 @@ namespace DotStepStarter
                 typeof(SimpleCalculator),
                 typeof(HelloWorldStateMachine)
             };
+
+            // TODO: move all this stuff to the Builder package.
 
             var template = DotStepBuilder.BuildCloudFormationTemplates(types);
             var path = $"{releaseDirectory}/template.json";
