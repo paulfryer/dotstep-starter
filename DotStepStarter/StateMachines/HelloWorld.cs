@@ -46,7 +46,7 @@ namespace DotStepStarter.StateMachines.HelloWorld
         public override async Task<Context> Execute(Context context)
         {
             var random = new Random();
-            var value = random.Next(0, 3);
+            var value = random.Next(0, 4);
             if (value == 2) {
                 Console.WriteLine($"Hello {context.Name}!");
                 context.HelloDelivered = true;
