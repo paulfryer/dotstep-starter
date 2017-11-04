@@ -13,8 +13,18 @@ namespace DotStepStarter.StateMachines.HelloWorld
         public int Iterations { get; set; }
     }
 
-    public sealed class HelloWorldStateMachine : StateMachine<CheckIfHelloRequired>
+    public sealed class HelloWorldStateMachine : StateMachine<InitializeVaraiables>
     {
+    }
+
+    public sealed class InitializeVaraiables : TaskState<Context, CheckIfHelloRequired>
+    {
+        public override async Task<Context> Execute(Context context)
+        {
+            context.Iterations = 0;
+            context.HelloDelivered = false;
+            return context;
+        }
     }
 
     public sealed class CheckIfHelloRequired : ChoiceState<TryToSayHello>
