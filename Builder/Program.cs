@@ -2,7 +2,9 @@
 using Amazon.S3.Model;
 using DotStep.Builder;
 using DotStepStarter.StateMachines.Calculator;
+using DotStepStarter.StateMachines.HelloWorld;
 using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace DotStepStarter
@@ -13,7 +15,13 @@ namespace DotStepStarter
         {
             IAmazonS3 s3 = new AmazonS3Client();
             var releaseDirectory = args.Length > 0 ? args[0] : "bin/release";
-            var template = DotStepBuilder.BuildCloudFormationTemplate<SimpleCalculator>();
+
+            var types = new List<Type> {
+                typeof(SimpleCalculator),
+                typeof(HelloWorldStateMachine)
+            };
+
+            var template = DotStepBuilder.BuildCloudFormationTemplates(types);
             var path = $"{releaseDirectory}/template.json";
             File.WriteAllText(path, template);
 

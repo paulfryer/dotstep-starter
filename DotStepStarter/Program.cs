@@ -1,5 +1,5 @@
 ﻿using DotStep.Core;
-using DotStepStarter.StateMachines.Calculator;
+using DotStepStarter.StateMachines.HelloWorld;
 
 namespace DotStepStarter
 {
@@ -7,16 +7,12 @@ namespace DotStepStarter
     {
         static void Main(string[] args)
         {
-            IStateMachine stateMachine = new SimpleCalculator();
-
+            IStateMachine stateMachine = new HelloWorldStateMachine();
             var context = new Context
             {
-                Number1 = 1159,
-                Number2 = 23,
-                StoreResultsOnS3 = true
+                Name = "Alice"
             };
-
-            var engine = new StateMachineEngine<SimpleCalculator, Context>(context);
+            var engine = new StateMachineEngine<HelloWorldStateMachine, Context>(context);
             engine.Start().Wait();
         }
     }

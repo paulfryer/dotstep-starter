@@ -24,7 +24,7 @@
       <Version>3.3.3.2</Version>
     </PackageReference>
     <PackageReference Include="DotStep.Core">
-      <Version>1.0.5</Version>
+      <Version>1.0.6</Version>
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json">
       <Version>9.0.1</Version>
