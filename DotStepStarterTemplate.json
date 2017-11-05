@@ -18,7 +18,8 @@
         "ServiceToken": { "Fn::GetAtt": [ "CodeInitializerFunction", "Arn" ] },
         "ProjectName": { "Ref": "ProjectName" },
         "CloneGitRepo": { "Ref": "CloneGitRepo" },
-        "Region": {"Ref":  "AWS::Region"}
+        "Region": { "Ref": "AWS::Region" },
+        "BucketName": {"Ref": "ArtifactBucket"}
       }
     },
     "CodeInitializerFunction": {
@@ -35,32 +36,56 @@
                 "var s3 = new AWS.S3();",
                 "var zlib = require('zlib');",
                 "exports.handler = (event, context, callback) => {",
+                "console.log(JSON.stringify(event));",
                 "process.env['PATH'] = process.env['PATH'] + ':' + process.env['LAMBDA_TASK_ROOT'];",
+                "",
+                "var bucket = event.ResourceProperties.BucketName;",
+                "var objectKey = event.ResourceProperties.ProjectName + '/initialization.zip';",
+                "",
+                "if (event.RequestType == 'Delete')",
+                "{",
+                "s3.ListObjects({Bucket: bucket, MaxKeys: 1000}).promise()",
+                ".then(data => {",
+                "var deleteTasks = [];",
+                "data.Contents.forEach(function(item){",
+                "deleteTasks.push(",
+                "s3.DeleteObject({",
+                "Key: item.Key,",
+                "Bucket: bucket}).promise());",
+                "});",
+                "return Promise.all(deleteTasks);",
+                "})",
+                ".then(done => {",
+                "response.send(event, context, response.SUCCESS);",
+                "});",
+                "}",
+                "else",
+                "{",
                 "var yaml = [",
-                "version: 0.1',",
-                "phases:',",
-                "  install:',",
-                "    command:',",
-                "      - apt-get update -y',",
-                "  pre_build:',",
-                "    commands:',",
-                "      - git config --global credential.helper \\'!aws codecommit credential-helper $@\\'',",
-                "      - git config --global credential.UseHttpPath true',",
-                "  build:',",
-                "    commands:',",
-                "      - git init',",
-                "      - git clone --mirror ' + event.ResourceProperties.CloneGitRepo + ' copiedrepo',",
-                "      - cd ./copiedrepo && git push https://git-codecommit.' + event.ResourceProperties.Region + '.amazonaws.com/v1/repos/' + event.ResourceProperties.ProjectName + ' --all'",
-                "].join('\n');",
+                "'version: 0.1',",
+                "'phases:',",
+                "'  install:',",
+                "'    command:',",
+                "'      - apt-get update -y',",
+                "'  pre_build:',",
+                "'    commands:',",
+                "'      - git config --global credential.helper \\'!aws codecommit credential-helper $@\\'',",
+                "'      - git config --global credential.UseHttpPath true',",
+                "'  build:',",
+                "'    commands:',",
+                "'      - git init',",
+                "'      - git clone --mirror ' + event.ResourceProperties.CloneGitRepo + ' copiedrepo',",
+                "'      - cd ./copiedrepo && git push https://git-codecommit.' + event.ResourceProperties.Region + '.amazonaws.com/v1/repos/' + event.ResourceProperties.ProjectName + ' --all'",
+                "].join('\\n');",
                 "var spawn = require('child_process').spawn;",
                 "var fs = require('fs');",
                 "fs.mkdirSync('/tmp/assets');",
                 "fs.mkdirSync('/tmp/archive');",
-                "\"fs.writeFile(\"/tmp/assets/buildspec.yml\", yaml, function(err) {\"",
+                "fs.writeFile('/tmp/assets/buildspec.yml', yaml, function(err) {",
                 "if(err) {",
                 "return console.log(err);",
                 "}",
-                "var zip = spawn('tar', ['-czf', '/tmp/archive/initialization.tar.gz', '-C', '/tmp/assets', '.']);",
+                "var zip = spawn('tar', ['-czf', '/tmp/archive/archive.zip', '-C', '/tmp/assets', '.']);",
                 "zip.stdout.on('data', function (data) {",
                 "console.log(data);",
                 "});",
@@ -71,27 +96,25 @@
                 "if(code !== 0) {",
                 "console.log('zip process exited with code ' + code);",
                 "} else {",
-                "\"console.log(\"done",
-                "creating",
-                "zip.\");\"",
-                "fs.readFile('/tmp/archive/initialization.tar.gz', function read(err, data) {",
+                "console.log('done creating zip.');",
+                "fs.readFile('/tmp/archive/archive.zip', function read(err, data) {",
                 "if (err) {",
                 "throw err;",
                 "}",
                 "var content = data;",
                 "",
-                "s3.putObject({Key: 'initialization.tar.gz',",
-                "Bucket: 'codepipeline-us-west-2-dotstep-project',",
+                "s3.putObject({Key: objectKey,",
+                "Bucket: bucket,",
                 "ContentEncoding: 'gzip',",
                 "Body: content }).promise()",
                 ".then(r => {",
-                "response.send(event, context, response.SUCCESS, {'TestProperty':'worked'});",
-                "callback(null, 'Done');",
+                "response.send(event, context, response.SUCCESS);",
                 "});",
                 "});",
                 "}",
                 "});",
                 "});",
+                "}",
                 "};"
               ]
             ]
@@ -130,9 +153,20 @@
                 "Statement": [
                   {
                     "Action": [
-                      "s3:PutObject"
+                      "s3:PutObject",
+                      "s3:ListObjects",
+                      "s3:DeleteObject"
                     ],
-                    "Resource": { "Fn::GetAtt": [ "ArtifactBucket", "Arn" ] },
+                    "Resource": {
+                      "Fn::Join": 
+                        ["/",
+                          [
+                            { "Fn::GetAtt": [ "ArtifactBucket", "Arn" ] },
+                            { "Ref": "ProjectName" },
+                            "*"
+                          ]
+                        ]                      
+                    },
                     "Effect": "Allow"
                   }
                 ],
@@ -273,7 +307,7 @@
                   {
                     "Effect": "Allow",
                     "Resource": [
-                      { "Fn::Sub": "arn:aws:s3:::${ArtifactBucket}/initialization.tar.gz" }
+                      { "Fn::Sub": "arn:aws:s3:::${ArtifactBucket}/${ProjectName}/initialization.zip" }
                     ],
                     "Action": [
                       "s3:GetObject",
@@ -313,7 +347,7 @@
           "Name": { "Fn::Sub": "${ProjectName}-initializer" },
           "Source": {
             "Type": "S3",
-            "Location": { "Fn::Sub": "arn:aws:s3:::${ArtifactBucket}/initialization.tar.gz" }
+            "Location": { "Fn::Sub": "arn:aws:s3:::${ArtifactBucket}/${ProjectName}/initialization.zip" }
           },
           "Environment": {
             "ComputeType": "BUILD_GENERAL1_SMALL",
@@ -328,7 +362,7 @@
       "ArtifactBucket": {
         "Type": "AWS::S3::Bucket",
         "Properties": {
-          "BucketName": { "Fn::Sub": "codepipeline-${AWS::Region}-${ProjectName}" }
+          "BucketName": { "Fn::Sub": "codepipeline-${AWS::Region}-${ProjectName}-${AWS::AccountId}" }
         }
       },
       "CodeBuildProject": {
