@@ -1,13 +1,13 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
   "Parameters": {
-    "ProjectName": {
+    "SourceCodeZip": {
       "Type": "String",
-      "Default" :  "dotstep-project"
+      "Default": "https://codeload.github.com/paulfryer/dotstep-starter/zip/master"
     },
-    "CloneGitRepo": {
+    "SourceCodeDirectory": {
       "Type": "String",
-      "Default": "https://github.com/paulfryer/dotstep-starter"
+      "Default" :  "dotstep-starter-master"
     }
   },
   "Resources": {
@@ -16,8 +16,8 @@
       "Version": "1.0",
       "Properties": {
         "ServiceToken": { "Fn::GetAtt": [ "CodeInitializerFunction", "Arn" ] },
-        "ProjectName": { "Ref": "ProjectName" },
-        "CloneGitRepo": { "Ref": "CloneGitRepo" },
+        "ProjectName": { "Ref": "AWS::StackName" },
+        "SourceCodeZip": { "Ref": "SourceCodeZip" },
         "Region": { "Ref": "AWS::Region" },
         "BucketName": {"Ref": "ArtifactBucket"}
       }
@@ -34,14 +34,11 @@
                 "var response = require('cfn-response');",
                 "var AWS = require('aws-sdk');",
                 "var s3 = new AWS.S3();",
-                "var zlib = require('zlib');",
                 "exports.handler = (event, context, callback) => {",
                 "console.log(JSON.stringify(event));",
-                "process.env['PATH'] = process.env['PATH'] + ':' + process.env['LAMBDA_TASK_ROOT'];",
-                "",
                 "var bucket = event.ResourceProperties.BucketName;",
                 "var objectKey = event.ResourceProperties.ProjectName + '/initialization.zip';",
-                "",
+                "var sourceCodeZipUrl = event.ResourceProperties.SourceCodeZip;",
                 "if (event.RequestType == 'Delete')",
                 "{",
                 "s3.ListObjects({Bucket: bucket, MaxKeys: 1000}).promise()",
@@ -61,66 +58,39 @@
                 "}",
                 "else",
                 "{",
-                "var yaml = [",
-                "'version: 0.1',",
-                "'phases:',",
-                "'  install:',",
-                "'    command:',",
-                "'      - apt-get update -y',",
-                "'  pre_build:',",
-                "'    commands:',",
-                "'      - git config --global credential.helper \\'!aws codecommit credential-helper $@\\'',",
-                "'      - git config --global credential.UseHttpPath true',",
-                "'  build:',",
-                "'    commands:',",
-                "'      - git init',",
-                "'      - git clone --mirror ' + event.ResourceProperties.CloneGitRepo + ' copiedrepo',",
-                "'      - cd ./copiedrepo && git push https://git-codecommit.' + event.ResourceProperties.Region + '.amazonaws.com/v1/repos/' + event.ResourceProperties.ProjectName + ' --all'",
-                "].join('\\n');",
-                "var spawn = require('child_process').spawn;",
-                "var fs = require('fs');",
-                "fs.mkdirSync('/tmp/assets');",
-                "fs.mkdirSync('/tmp/archive');",
-                "fs.writeFile('/tmp/assets/buildspec.yml', yaml, function(err) {",
-                "if(err) {",
-                "return console.log(err);",
-                "}",
-                "var zip = spawn('tar', ['-czf', '/tmp/archive/archive.zip', '-C', '/tmp/assets', '.']);",
-                "zip.stdout.on('data', function (data) {",
-                "console.log(data);",
-                "});",
-                "zip.stderr.on('data', function (data) {",
-                "console.log('zip stderr: ' + data);",
-                "});",
-                "zip.on('exit', function (code) {",
-                "if(code !== 0) {",
-                "console.log('zip process exited with code ' + code);",
-                "} else {",
-                "console.log('done creating zip.');",
-                "fs.readFile('/tmp/archive/archive.zip', function read(err, data) {",
-                "if (err) {",
-                "throw err;",
-                "}",
-                "var content = data;",
-                "",
+                "download(sourceCodeZipUrl, function(data){",
                 "s3.putObject({Key: objectKey,",
                 "Bucket: bucket,",
-                "ContentEncoding: 'gzip',",
-                "Body: content }).promise()",
+                "ContentType: 'application/zip',",
+                "ServerSideEncryption: 'AES256',",
+                "Body: data }).promise()",
                 ".then(r => {",
                 "response.send(event, context, response.SUCCESS);",
                 "});",
                 "});",
                 "}",
+                "};",
+                "function download(url, cb) {",
+                "var data = [];",
+                "var request = require('https').get(url, function(res) {",
+                "",
+                "res.on('data', function(chunk) {",
+                "data.push(chunk);",
+                "});",
+                "res.on('end', function() {",
+                "var buffer = Buffer.concat(data);",
+                "cb(buffer);",
                 "});",
                 "});",
-                "}",
-                "};"
+                "request.on('error', function(e) {",
+                "console.log('Got error: ' + e.message);",
+                "});",
+                "}"
               ]
             ]
           }
         },
-        "FunctionName": { "Fn::Sub": "${ProjectName}-initializer" },
+        "FunctionName": { "Fn::Sub": "${AWS::StackName}-initializer" },
         "Handler": "index.handler",
         "MemorySize": 128,
         "Role": { "Fn::GetAtt": [ "CodeInitializerRole", "Arn" ] },
@@ -162,7 +132,7 @@
                         ["/",
                           [
                             { "Fn::GetAtt": [ "ArtifactBucket", "Arn" ] },
-                            { "Ref": "ProjectName" },
+                            { "Ref": "AWS::StackName" },
                             "*"
                           ]
                         ]                      
@@ -174,13 +144,13 @@
               }
             }
           ],
-          "RoleName": { "Fn::Sub": "${ProjectName}-initializer-role" }
+          "RoleName": { "Fn::Sub": "${AWS::StackName}-initializer-role" }
         }
       },
       "CodeCommitRepository": {
         "Type": "AWS::CodeCommit::Repository",
         "Properties": {
-          "RepositoryName": { "Ref": "ProjectName" }
+          "RepositoryName": { "Ref": "AWS::StackName" }
         }
       },
       "CodeBuildRole": {
@@ -208,8 +178,8 @@
                   {
                     "Effect": "Allow",
                     "Resource": [
-                      { "Fn::Sub": "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/${ProjectName}" },
-                      { "Fn::Sub": "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/${ProjectName}:*" }
+                      { "Fn::Sub": "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/${AWS::StackName}" },
+                      { "Fn::Sub": "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/${AWS::StackName}:*" }
                     ],
                     "Action": [
                       "logs:CreateLogGroup",
@@ -244,7 +214,7 @@
               "-",
               [
                 "code-build",
-                { "Ref": "ProjectName" },
+                { "Ref": "AWS::StackName" },
                 { "Ref": "AWS::Region" },
                 "service-role"
               ]
@@ -284,8 +254,8 @@
                   {
                     "Effect": "Allow",
                     "Resource": [
-                      { "Fn::Sub": "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/${ProjectName}-initializer" },
-                      { "Fn::Sub": "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/${ProjectName}-initializer:*" }
+                      { "Fn::Sub": "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/${AWS::StackName}-initializer" },
+                      { "Fn::Sub": "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/${AWS::StackName}-initializer:*" }
                     ],
                     "Action": [
                       "logs:CreateLogGroup",
@@ -307,7 +277,7 @@
                   {
                     "Effect": "Allow",
                     "Resource": [
-                      { "Fn::Sub": "arn:aws:s3:::${ArtifactBucket}/${ProjectName}/initialization.zip" }
+                      { "Fn::Sub": "arn:aws:s3:::${ArtifactBucket}/${AWS::StackName}/initialization.zip" }
                     ],
                     "Action": [
                       "s3:GetObject",
@@ -330,7 +300,7 @@
               "-",
               [
                 "code-build",
-                { "Ref": "ProjectName" },
+                { "Ref": "AWS::StackName" },
                 "initializer",
                 { "Ref": "AWS::Region" },
                 "service-role"
@@ -344,10 +314,11 @@
         "DependsOn": [ "ArtifactBucket", "CodeInitializer" ],
         "Properties": {
           "ServiceRole": { "Fn::GetAtt": [ "CodeBuildInitializerRole", "Arn" ] },
-          "Name": { "Fn::Sub": "${ProjectName}-initializer" },
+          "Name": { "Fn::Sub": "${AWS::StackName}-initializer" },
           "Source": {
             "Type": "S3",
-            "Location": { "Fn::Sub": "arn:aws:s3:::${ArtifactBucket}/${ProjectName}/initialization.zip" }
+            "Location": { "Fn::Sub": "arn:aws:s3:::${ArtifactBucket}/${AWS::StackName}/initialization.zip" },
+            "BuildSpec": {"Fn::Sub": "git config --global user.name \"code-build\" && git config --global user.email \"code-build@example.com\" && git config --global credential.helper '!aws codecommit credential-helper $@' && git config --global credential.UseHttpPath true && cd ./${SourceCodeDirectory} && git init && git remote add origin https://git-codecommit.${AWS::Region}.amazonaws.com/v1/repos/${AWS::StackName} && git add * && git commit -m \"Initialization\" && git push -u origin master"}
           },
           "Environment": {
             "ComputeType": "BUILD_GENERAL1_SMALL",
@@ -362,14 +333,14 @@
       "ArtifactBucket": {
         "Type": "AWS::S3::Bucket",
         "Properties": {
-          "BucketName": { "Fn::Sub": "codepipeline-${AWS::Region}-${ProjectName}-${AWS::AccountId}" }
+          "BucketName": { "Fn::Sub": "codepipeline-${AWS::Region}-${AWS::StackName}-${AWS::AccountId}" }
         }
       },
       "CodeBuildProject": {
         "Type": "AWS::CodeBuild::Project",
         "Properties": {
           "ServiceRole": { "Fn::GetAtt": [ "CodeBuildRole", "Arn" ] },
-          "Name": { "Ref": "ProjectName" },
+          "Name": { "Ref": "AWS::StackName" },
           "Source": {
             "Type": "CODEPIPELINE"
           },
@@ -519,7 +490,7 @@
               "-",
               [
                 "code-pipeline",
-                { "Ref": "ProjectName" },
+                { "Ref": "AWS::StackName" },
                 { "Ref": "AWS::Region" },
                 "role"
               ]
@@ -573,7 +544,7 @@
               }
             }
           ],
-          "RoleName": { "Fn::Sub": "${ProjectName}-deployer-role" }
+          "RoleName": { "Fn::Sub": "${AWS::StackName}-deployer-role" }
         }
       },
       "CloudFormationDeployerFunction": {
@@ -660,7 +631,7 @@
               ]
             }
           },
-          "FunctionName": { "Fn::Sub": "${ProjectName}-deployer" },
+          "FunctionName": { "Fn::Sub": "${AWS::StackName}-deployer" },
           "Handler": "index.handler",
           "MemorySize": 128,
           "Role": { "Fn::GetAtt": [ "CloudFormationDeployerFunctionRole", "Arn" ] },
@@ -676,7 +647,7 @@
             "Location": { "Ref": "ArtifactBucket" },
             "Type": "S3"
           },
-          "Name": { "Ref": "ProjectName" },
+          "Name": { "Ref": "AWS::StackName" },
           "RoleArn": { "Fn::GetAtt": [ "CodePipelineRole", "Arn" ] },
           "Stages": [
             {
@@ -689,7 +660,7 @@
                     "Version": "1"
                   },
                   "Configuration": {
-                    "RepositoryName": { "Ref": "ProjectName" },
+                    "RepositoryName": { "Ref": "AWS::StackName" },
                     "BranchName": "master"
                   },
                   "Name": "Source",
@@ -712,7 +683,7 @@
                     "Version": "1"
                   },
                   "Configuration": {
-                    "ProjectName": { "Ref": "ProjectName" }
+                    "ProjectName": { "Ref": "AWS::StackName" }
                   },
                   "Name": "Build",
                   "InputArtifacts": [
@@ -740,7 +711,7 @@
                     "Version": "1"
                   },
                   "Configuration": {
-                    "FunctionName": { "Fn::Sub": "${ProjectName}-deployer" }
+                    "FunctionName": { "Fn::Sub": "${AWS::StackName}-deployer" }
                   },
                   "InputArtifacts": [
                     {

@@ -1,0 +1,14 @@
+﻿version: 0.1
+phases:
+  build:
+    commands:
+      - git config --global user.name "code-build"
+      - git config --global user.email "code-build@example.com"
+      - git config --global credential.helper '!aws codecommit credential-helper $@'
+      - git config --global credential.UseHttpPath true
+      - cd ./dotstep-starter-master
+      - git init
+      - git remote add origin https://git-codecommit.us-west-2.amazonaws.com/v1/repos/dotstep-project-9
+      - git add *
+      - git commit -m "Initialization"
+      - git push -u origin master
