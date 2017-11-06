@@ -41,7 +41,7 @@
                 "var sourceCodeZipUrl = event.ResourceProperties.SourceCodeZip;",
                 "if (event.RequestType == 'Delete')",
                 "{",
-                "s3.ListObjects({Bucket: bucket, MaxKeys: 1000}).promise()",
+                "s3.listObjects({Bucket: bucket, MaxKeys: 1000}).promise()",
                 ".then(data => {",
                 "var deleteTasks = [];",
                 "data.Contents.forEach(function(item){",
@@ -318,7 +318,7 @@
         "Source": {
           "Type": "S3",
           "Location": { "Fn::Sub": "arn:aws:s3:::${ArtifactBucket}/${AWS::StackName}/initialization.zip" },
-          "BuildSpec": { "Fn::Sub": "version: 0.1\nphases:\n  build:\n    commands:\n      - git config --global user.name \"code-build\"\n      - git config --global user.email \"code-build@example.com\"\n      - git config --global credential.helper '!aws codecommit credential-helper $@'\n      - git config --global credential.UseHttpPath true\n      - cd ./${SourceCodeDirectory}\n      - git init\n      - git remote add origin https://git-codecommit.${AWS::Region}.amazonaws.com/v1/repos/${AWS::StackName}\n      - git add *\n      - git commit -m \"Initialization\"\n      - git push -u origin master" }
+          "BuildSpec": { "Fn::Sub": "version: 0.1\nphases:\n  build:\n    commands:\n      - git config --global user.name \"code-build\"\n      - git config --global user.email \"code-build@example.com\"\n      - git config --global credential.helper '!aws codecommit credential-helper $@'\n      - git config --global credential.UseHttpPath true\n      - cd ./${SourceCodeDirectory} && git init && git remote add origin https://git-codecommit.${AWS::Region}.amazonaws.com/v1/repos/${AWS::StackName} && git add * && git commit -m \"Initialization\" && git push -u origin master" }
         },
         "Environment": {
           "ComputeType": "BUILD_GENERAL1_SMALL",
@@ -526,8 +526,20 @@
                     "cloudformation:ListStacks",
                     "cloudformation:UpdateStack",
                     "cloudformation:CreateStack",
-                    "codepipeline:PutJobSuccess",
-                    "codepipeline:PutJobFailure"
+                    "codepipeline:PutJobSuccessResult",
+                    "codepipeline:PutJobFailureResult",
+                    "iam:PutRolePolicy",
+                    "iam:DeleteRole",
+                    "iam:PassRole",
+                    "iam:GetRole",
+                    "iam:DeleteRolePolicy",
+                    "iam:DetachRolePolicy",
+                    "iam:CreateRole",
+                    "states:CreateStateMachine",
+                    "states:DeleteStateMachine",
+                    "lambda:GetFunctionConfiguration",
+                    "lambda:UpdateFunctionCode",
+                    "lambda:DeleteFunction"
                   ],
                   "Resource": "*",
                   "Effect": "Allow"
@@ -536,7 +548,12 @@
                   "Action": [
                     "s3:GetObject"
                   ],
-                  "Resource": { "Fn::GetAtt": [ "ArtifactBucket", "Arn" ] },
+                  "Resource": {
+                    "Fn::Join": [
+                      "/",
+                      [ { "Fn::GetAtt": [ "ArtifactBucket", "Arn" ] }, "*" ]
+                    ]
+                  },
                   "Effect": "Allow"
                 }
               ],
