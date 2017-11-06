@@ -23,7 +23,7 @@
       }
     },
     "CodeInitializerFunction": {
-      "DependsOn": [ "ArtifactBucket" ],
+      "DependsOn": [ "ArtifactBucket", "CodeBuildInitializerProject" ],
       "Type": "AWS::Lambda::Function",
       "Properties": {
         "Code": {
@@ -34,6 +34,7 @@
                 "var response = require('cfn-response');",
                 "var AWS = require('aws-sdk');",
                 "var s3 = new AWS.S3();",
+                "var codebuild = new AWS.CodeBuild();",
                 "exports.handler = (event, context, callback) => {",
                 "console.log(JSON.stringify(event));",
                 "var bucket = event.ResourceProperties.BucketName;",
@@ -45,8 +46,9 @@
                 ".then(data => {",
                 "var deleteTasks = [];",
                 "data.Contents.forEach(function(item){",
+                "console.log('trying to delete: ', item.Key, bucket);",
                 "deleteTasks.push(",
-                "s3.DeleteObject({",
+                "s3.deleteObject({",
                 "Key: item.Key,",
                 "Bucket: bucket}).promise());",
                 "});",
@@ -64,6 +66,7 @@
                 "ContentType: 'application/zip',",
                 "ServerSideEncryption: 'AES256',",
                 "Body: data }).promise()",
+                ".then(r => codebuild.startBuild({projectName: event.ResourceProperties.ProjectName + '-initializer'}).promise())",
                 ".then(r => {",
                 "response.send(event, context, response.SUCCESS);",
                 "});",
@@ -122,9 +125,13 @@
             "PolicyDocument": {
               "Statement": [
                 {
+                  "Effect": "Allow",
+                  "Resource": { "Fn::GetAtt": [ "ArtifactBucket", "Arn" ] },
+                  "Action":  "s3:ListObjects"
+                },
+                {
                   "Action": [
                     "s3:PutObject",
-                    "s3:ListObjects",
                     "s3:DeleteObject"
                   ],
                   "Resource": {
@@ -138,6 +145,11 @@
                     ]
                   },
                   "Effect": "Allow"
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [ "codebuild:StartBuild" ],
+                  "Resource": { "Fn::GetAtt": [ "CodeBuildInitializerProject", "Arn" ] }
                 }
               ],
               "Version": "2012-10-17"
@@ -311,7 +323,7 @@
     },
     "CodeBuildInitializerProject": {
       "Type": "AWS::CodeBuild::Project",
-      "DependsOn": [ "ArtifactBucket", "CodeInitializer" ],
+      "DependsOn": [ "ArtifactBucket"],
       "Properties": {
         "ServiceRole": { "Fn::GetAtt": [ "CodeBuildInitializerRole", "Arn" ] },
         "Name": { "Fn::Sub": "${AWS::StackName}-initializer" },
@@ -333,6 +345,7 @@
     "ArtifactBucket": {
       "Type": "AWS::S3::Bucket",
       "Properties": {
+        "AccessControl": "AuthenticatedRead",
         "BucketName": { "Fn::Sub": "codepipeline-${AWS::Region}-${AWS::StackName}-${AWS::AccountId}" }
       }
     },
@@ -535,6 +548,7 @@
                     "iam:DeleteRolePolicy",
                     "iam:DetachRolePolicy",
                     "iam:CreateRole",
+                    "iam:AttachRolePolicy",
                     "states:CreateStateMachine",
                     "states:DeleteStateMachine",
                     "lambda:GetFunctionConfiguration",
@@ -583,7 +597,7 @@
                 "var projectName = s3Location.objectKey.split('/')[0];",
                 "var region = context.invokedFunctionArn.split(':')[3];",
                 "var params = {",
-                "StackName: projectName,",
+                "StackName: projectName + '-deployment',",
                 "Capabilities: [",
                 "'CAPABILITY_NAMED_IAM'",
                 "],",
@@ -617,7 +631,7 @@
                 ".then(data => {",
                 "var stackExists = false;",
                 "data.StackSummaries.forEach(function (stackSummary){",
-                "if (stackSummary.StackName == projectName)",
+                "if (stackSummary.StackName == params.StackName)",
                 "stackExists = true;",
                 "});",
                 "if (stackExists) {",
@@ -658,7 +672,7 @@
     },
     "CodePipeline": {
       "Type": "AWS::CodePipeline::Pipeline",
-      "DependsOn": [ "CodeCommitRepository", "CodeBuildProject", "CloudFormationDeployerFunction" ],
+      "DependsOn": [ "CodeCommitRepository", "CodeBuildProject", "CloudFormationDeployerFunction", "CodeInitializerFunction" ],
       "Properties": {
         "ArtifactStore": {
           "Location": { "Ref": "ArtifactBucket" },
