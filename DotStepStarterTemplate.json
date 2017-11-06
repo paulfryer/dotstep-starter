@@ -541,19 +541,9 @@
                     "cloudformation:CreateStack",
                     "codepipeline:PutJobSuccessResult",
                     "codepipeline:PutJobFailureResult",
-                    "iam:PutRolePolicy",
-                    "iam:DeleteRole",
-                    "iam:PassRole",
-                    "iam:GetRole",
-                    "iam:DeleteRolePolicy",
-                    "iam:DetachRolePolicy",
-                    "iam:CreateRole",
-                    "iam:AttachRolePolicy",
-                    "states:CreateStateMachine",
-                    "states:DeleteStateMachine",
-                    "lambda:GetFunctionConfiguration",
-                    "lambda:UpdateFunctionCode",
-                    "lambda:DeleteFunction"
+                    "iam:*",
+                    "states:*",
+                    "lambda:*"
                   ],
                   "Resource": "*",
                   "Effect": "Allow"
