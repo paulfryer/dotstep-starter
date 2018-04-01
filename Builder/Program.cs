@@ -21,7 +21,7 @@ namespace Builder
                 typeof(HelloWorldStateMachine)
             };
 
-            // TODO: move all this stuff to the Builder package.
+            // TODO: move all this stuff to the Builder package and move the list of State Machines to command line parameter.
 
             var template = DotStepBuilder.BuildCloudFormationTemplates(types);
             var path = $"{releaseDirectory}/template.json";
