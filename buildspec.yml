@@ -6,11 +6,8 @@ phases:
   post_build:
     commands:
       - dotnet new console --name Builder
-      - cd Builder
-      - sed -i 's/Console.WriteLine("Hello World!")/DotStep.Builder.DotStepBuilder.BuildTemplate(args[0])/g' Program.cs
-      - dotnet add package DotStep.Builder
-      - dotnet build
-      - dotnet bin\Debug\netcoreapp2.0\Builder.dll DotStepStarter/bin/release/netcoreapp2.0/publish/
+      - sed -i 's/Console.WriteLine("Hello World!")/DotStep.Builder.DotStepBuilder.BuildTemplate(args[0])/g' Builder/Program.cs
+      - cd Builder && dotnet add package DotStep.Builder && dotnet build && dotnet bin/Debug/netcoreapp2.0/Builder.dll ../DotStepStarter/bin/release/netcoreapp2.0/publish/
 artifacts:
   files:
     - DotStepStarter/bin/release/netcoreapp2.0/publish/**/*
