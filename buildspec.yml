@@ -2,14 +2,17 @@
 phases:
   build:
     commands:
-      - dotnet restore DotStepStarter
       - dotnet publish -c release DotStepStarter
   post_build:
     commands:
-      - dotnet restore Builder
-      - dotnet publish -c release Builder
-      - dotnet Builder/bin/release/netcoreapp2.0/publish/Builder.dll Builder/bin/release
+      - dotnet new console --name Builder
+      - cd Builder
+      - sed -i 's/Console.WriteLine("Hello World!")/DotStep.Builder.DotStepBuilder.BuildTemplate(args[0])/g' Program.cs
+      - dotnet add package DotStep.Builder
+      - dotnet build
+      - dotnet bin\Debug\netcoreapp2.0\Builder.dll DotStepStarter/bin/release/netcoreapp2.0/publish/
 artifacts:
   files:
     - DotStepStarter/bin/release/netcoreapp2.0/publish/**/*
+    - Bulider/cf-template.json
   discard-paths: yes
