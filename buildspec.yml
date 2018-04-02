@@ -2,12 +2,13 @@
 phases:
   build:
     commands:
+      - dotnet build DotStepStarter
       - dotnet publish -c release DotStepStarter
   post_build:
     commands:
       - dotnet new console --name Builder
       - sed -i 's/Console.WriteLine("Hello World!")/DotStep.Builder.DotStepBuilder.BuildTemplate(args[0])/g' Builder/Program.cs
-      - cd Builder && dotnet add package DotStep.Builder && dotnet build && dotnet bin/Debug/netcoreapp2.0/Builder.dll ../DotStepStarter/bin/release/netcoreapp2.0/publish/
+      - cd Builder && dotnet add package DotStep.Builder && dotnet build && dotnet bin/Debug/netcoreapp2.0/Builder.dll ../DotStepStarter/bin/Debug/netcoreapp2.0/
 artifacts:
   files:
     - DotStepStarter/bin/release/netcoreapp2.0/publish/**/*
