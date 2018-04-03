@@ -40,7 +40,7 @@ namespace DotStepStarter.StateMachines
                     return new List<Choice>
                     {
                         new Choice<MakeProductSmaller, Context>(c => c.Product > 100),
-                        new Choice<StoreResultsOnS3, Context>(c => c.StoreResultsOnS3)
+                        new Choice<StoreResultsOnS3, Context>(c => c.StoreResultsOnS3 == true)
                     };
                 }
             }

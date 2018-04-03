@@ -35,7 +35,7 @@ namespace DotStepStarter.StateMachines
                     return new List<Choice>
                     {
                         new Choice<Done, Context>(c => c.Iterations >= 10),
-                        new Choice<Done, Context>(c => c.HelloDelivered)
+                        new Choice<Done, Context>(c => c.HelloDelivered == true)
                     };
                 }
             }
