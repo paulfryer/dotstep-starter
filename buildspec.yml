@@ -14,5 +14,5 @@ phases:
       - cd Builder && dotnet add package DotStep.Builder && dotnet build && dotnet bin/Debug/netcoreapp2.0/Builder.dll ../DotStepStarter/bin/Debug/netcoreapp2.0/
 artifacts:
   files:
-    - $BUILD_PROJECT_NAME/bin/release/netcoreapp2.0/publish/**/*
+    - DotStepStarter/bin/release/netcoreapp2.0/publish/**/*
   discard-paths: yes
