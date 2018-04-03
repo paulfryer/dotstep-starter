@@ -1,9 +1,12 @@
 ﻿version: 0.1
 phases:
+  pre_build:
+    commands:
+      - BUILD_PROJECT_NAME=DotStepStarter
   build:
     commands:
-      - dotnet build DotStepStarter
-      - dotnet publish -c release DotStepStarter
+      - dotnet build $BUILD_PROJECT_NAME
+      - dotnet publish -c release $BUILD_PROJECT_NAME
   post_build:
     commands:
       - dotnet new console --name Builder
@@ -11,6 +14,5 @@ phases:
       - cd Builder && dotnet add package DotStep.Builder && dotnet build && dotnet bin/Debug/netcoreapp2.0/Builder.dll ../DotStepStarter/bin/Debug/netcoreapp2.0/
 artifacts:
   files:
-    - DotStepStarter/bin/release/netcoreapp2.0/publish/**/*
-    - Bulider/cf-template.json
+    - $BUILD_PROJECT_NAME/bin/release/netcoreapp2.0/publish/**/*
   discard-paths: yes
