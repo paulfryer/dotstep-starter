@@ -1,17 +1,15 @@
-﻿using Amazon.IdentityManagement;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using Amazon.S3;
 using Amazon.S3.Model;
 using Amazon.SecurityToken;
 using Amazon.SecurityToken.Model;
 using DotStep.Core;
 using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
-namespace DotStepStarter.StateMachines.Calculator
+namespace DotStepStarter.StateMachines
 {
-
     public sealed class SimpleCalculator : StateMachine<SimpleCalculator.AddNumbers>
     {
         public class Context : IContext
@@ -39,10 +37,11 @@ namespace DotStepStarter.StateMachines.Calculator
             {
                 get
                 {
-                    return new List<Choice> {
-                    new Choice<MakeProductSmaller, Context>(c => c.Product > 100),
-                    new Choice<StoreResultsOnS3, Context>(c => c.StoreResultsOnS3 == true)
-                };
+                    return new List<Choice>
+                    {
+                        new Choice<MakeProductSmaller, Context>(c => c.Product > 100),
+                        new Choice<StoreResultsOnS3, Context>(c => c.StoreResultsOnS3)
+                    };
                 }
             }
         }
@@ -61,13 +60,12 @@ namespace DotStepStarter.StateMachines.Calculator
         [DotStep.Core.Action(ActionName = "s3:PutObject")]
         public sealed class StoreResultsOnS3 : TaskState<Context, Done>
         {
-            IAmazonS3 s3 = new AmazonS3Client();
-            IAmazonSecurityTokenService sts = new AmazonSecurityTokenServiceClient();
+            readonly IAmazonS3 s3 = new AmazonS3Client();
+            readonly IAmazonSecurityTokenService sts = new AmazonSecurityTokenServiceClient();
 
             public override async Task<Context> Execute(Context context)
             {
-
-                var getCallerResult = await sts.GetCallerIdentityAsync(new GetCallerIdentityRequest { });
+                var getCallerResult = await sts.GetCallerIdentityAsync(new GetCallerIdentityRequest());
 
                 var accountId = getCallerResult.Account;
                 var region = Environment.GetEnvironmentVariable("AWS_DEFAULT_REGION") ?? "us-west-2";
@@ -108,5 +106,4 @@ namespace DotStepStarter.StateMachines.Calculator
             public override bool End => true;
         }
     }
-
 }

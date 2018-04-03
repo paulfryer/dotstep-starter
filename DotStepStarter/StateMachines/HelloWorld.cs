@@ -1,12 +1,10 @@
-﻿using DotStep.Core;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using DotStep.Core;
 
-namespace DotStepStarter.StateMachines.HelloWorld
+namespace DotStepStarter.StateMachines
 {
-
-
     public sealed class HelloWorldStateMachine : StateMachine<HelloWorldStateMachine.InitializeVaraiables>
     {
         public class Context : IContext
@@ -34,10 +32,11 @@ namespace DotStepStarter.StateMachines.HelloWorld
             {
                 get
                 {
-                    return new List<Choice> {
-                    new Choice<Done, Context>(c => c.Iterations >= 10),
-                    new Choice<Done, Context>(c => c.HelloDelivered == true)
-                };
+                    return new List<Choice>
+                    {
+                        new Choice<Done, Context>(c => c.Iterations >= 10),
+                        new Choice<Done, Context>(c => c.HelloDelivered)
+                    };
                 }
             }
         }
@@ -53,6 +52,7 @@ namespace DotStepStarter.StateMachines.HelloWorld
                     Console.WriteLine($"Hello {context.Name}!");
                     context.HelloDelivered = true;
                 }
+
                 context.Iterations++;
                 return context;
             }
@@ -63,5 +63,4 @@ namespace DotStepStarter.StateMachines.HelloWorld
             public override bool End => true;
         }
     }
-
 }
