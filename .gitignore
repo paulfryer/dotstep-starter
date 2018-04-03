@@ -6,4 +6,4 @@ _ReSharper.*
 .vs
 */bin
 */obj
-*/PublishProfiles
+*.pubxml
