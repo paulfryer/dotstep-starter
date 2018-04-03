@@ -1,12 +1,9 @@
-﻿version: 0.1
+version: 0.1
 phases:
-  pre_build:
-    commands:
-      - BUILD_PROJECT_NAME=DotStepStarter
   build:
     commands:
-      - dotnet build $BUILD_PROJECT_NAME
-      - dotnet publish -c release $BUILD_PROJECT_NAME
+      - dotnet build DotStepStarter
+      - dotnet publish -c release DotStepStarter
   post_build:
     commands:
       - dotnet new console --name Builder
